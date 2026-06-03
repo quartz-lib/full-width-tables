@@ -29,24 +29,11 @@ const appendClass = (node: Element, className: string) => {
   };
 };
 
-const hasClass = (node: Element, className: string) => {
-  const existing = node.properties?.className;
-  const classes: string[] = Array.isArray(existing)
-    ? existing.filter((value): value is string => typeof value === "string")
-    : typeof existing === "string"
-      ? [existing]
-      : [];
-  return classes.includes(className);
-};
-
 const rehypeFullWidthTables = (containerClass: string): Plugin<[], HastRoot> => {
   return () => (tree: HastRoot, _file: VFile) => {
+    // Quartz wraps tables in `.table-container` later during htmlToJsx — only the
+    // `<table>` node exists in the HAST at this stage.
     visit(tree, "element", (node: Element) => {
-      if (node.tagName === "div" && hasClass(node, "table-container")) {
-        appendClass(node, containerClass);
-        return;
-      }
-
       if (node.tagName === "table") {
         appendClass(node, containerClass);
       }
@@ -56,10 +43,12 @@ const rehypeFullWidthTables = (containerClass: string): Plugin<[], HastRoot> => 
 
 const buildStyles = (options: FullWidthTablesOptions) => {
   const { containerClass, tableLayout, stretchToViewport } = options;
+  const tableSelector = `article .table-container > table.${containerClass}`;
+  const containerSelector = `article .table-container:has(> table.${containerClass})`;
 
   const containerRules = stretchToViewport
     ? `
-article .table-container.${containerClass} {
+${containerSelector} {
   width: 100vw;
   max-width: 100vw;
   position: relative;
@@ -68,19 +57,19 @@ article .table-container.${containerClass} {
   margin-right: -50vw;
 }`
     : `
-article .table-container.${containerClass} {
+${containerSelector} {
   width: 100%;
   max-width: 100%;
-  margin-inline: 0;
 }`;
 
   return `
 ${containerRules}
 
-article .table-container.${containerClass} > table {
+${tableSelector} {
   width: 100%;
   max-width: 100%;
-  margin-inline: 0;
+  margin: 1rem 0;
+  padding: 0;
   table-layout: ${tableLayout};
   box-sizing: border-box;
 }

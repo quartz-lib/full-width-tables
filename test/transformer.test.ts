@@ -5,22 +5,15 @@ import { FullWidthTables } from "../src/transformer";
 import { createCtx } from "./helpers";
 
 describe("FullWidthTables", () => {
-  it("adds container class to table wrappers", () => {
+  it("adds class to table elements only", () => {
     const tree: HastRoot = {
       type: "root",
       children: [
         {
           type: "element",
-          tagName: "div",
-          properties: { className: ["table-container"] },
-          children: [
-            {
-              type: "element",
-              tagName: "table",
-              properties: {},
-              children: [],
-            },
-          ],
+          tagName: "table",
+          properties: {},
+          children: [],
         },
       ],
     };
@@ -30,14 +23,7 @@ describe("FullWidthTables", () => {
     const rehypePlugin = plugins[0] as () => (tree: HastRoot, file: VFile) => void;
     rehypePlugin()(tree, new VFile(""));
 
-    const container = tree.children[0];
-    if (container?.type !== "element") {
-      throw new Error("expected table container element");
-    }
-
-    expect(container.properties?.className).toContain("full-width-tables");
-
-    const table = container.children[0];
+    const table = tree.children[0];
     if (table?.type !== "element") {
       throw new Error("expected table element");
     }
@@ -51,6 +37,7 @@ describe("FullWidthTables", () => {
 
     expect(resources?.css?.[0]?.content).toContain("width: 100%");
     expect(resources?.css?.[0]?.content).toContain("table-layout: fixed");
+    expect(resources?.css?.[0]?.content).toContain(":has(> table.full-width-tables)");
   });
 
   it("supports viewport stretch mode", () => {

@@ -218,18 +218,9 @@ var appendClass = (node, className) => {
     className: [...classes, className]
   };
 };
-var hasClass = (node, className) => {
-  const existing = node.properties?.className;
-  const classes = Array.isArray(existing) ? existing.filter((value) => typeof value === "string") : typeof existing === "string" ? [existing] : [];
-  return classes.includes(className);
-};
 var rehypeFullWidthTables = (containerClass) => {
   return () => (tree, _file) => {
     visit(tree, "element", (node) => {
-      if (node.tagName === "div" && hasClass(node, "table-container")) {
-        appendClass(node, containerClass);
-        return;
-      }
       if (node.tagName === "table") {
         appendClass(node, containerClass);
       }
@@ -238,8 +229,10 @@ var rehypeFullWidthTables = (containerClass) => {
 };
 var buildStyles = (options) => {
   const { containerClass, tableLayout, stretchToViewport } = options;
+  const tableSelector = `article .table-container > table.${containerClass}`;
+  const containerSelector = `article .table-container:has(> table.${containerClass})`;
   const containerRules = stretchToViewport ? `
-article .table-container.${containerClass} {
+${containerSelector} {
   width: 100vw;
   max-width: 100vw;
   position: relative;
@@ -247,18 +240,18 @@ article .table-container.${containerClass} {
   margin-left: -50vw;
   margin-right: -50vw;
 }` : `
-article .table-container.${containerClass} {
+${containerSelector} {
   width: 100%;
   max-width: 100%;
-  margin-inline: 0;
 }`;
   return `
 ${containerRules}
 
-article .table-container.${containerClass} > table {
+${tableSelector} {
   width: 100%;
   max-width: 100%;
-  margin-inline: 0;
+  margin: 1rem 0;
+  padding: 0;
   table-layout: ${tableLayout};
   box-sizing: border-box;
 }

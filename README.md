@@ -100,8 +100,11 @@ export default {
 
 插件做两件事：
 
-1. **rehype 插件**：在 HTML AST 阶段，给 Quartz 生成的 `.table-container` 和其中的 `<table>` 添加 `full-width-tables` class。
+1. **rehype 插件**：在 HTML AST 阶段，给 Markdown 渲染出的 `<table>` 添加 `full-width-tables` class。
 2. **CSS 注入**：通过 Transformer 的 `externalResources()` 钩子，向页面注入内联样式，覆盖默认的表格宽度与边距。
+
+> [!note]
+> Quartz 会在 rehype 之后、JSX 转换阶段才用 `htmlToJsx` 把 `<table>` 包进 `<div class="table-container">`。因此 class 只会出现在 `<table>` 上，CSS 通过 `:has()` 选择器匹配外层容器。
 
 默认模式下，表格占满 `article` 正文区域；开启 `stretchToViewport` 后，容器通过负边距技巧延伸至 `100vw`。
 
